@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Study Planner Pro - Unique</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif}
+body{background: radial-gradient(circle at top, #1e1b4b, #020617); min-height:100vh; padding:15px; color:#fff}
+.top{max-width:1100px;margin:0 auto 20px;background:linear-gradient(90deg, rgba(99,102,241,0.2), rgba(168,85,247,0.2));border:1px solid rgba(255,255,255,0.1);padding:18px 25px;border-radius:18px;display:flex;justify-content:space-between;align-items:center;backdrop-filter:blur(10px)}
+.top h1{font-size:22px}.top h1 span{color:#a5b4fc}
+.main{max-width:1100px;margin:auto;display:grid;grid-template-columns:380px 1fr;gap:20px}
+@media(max-width:800px){.main{grid-template-columns:1fr}}
+.glass{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:22px;padding:22px;backdrop-filter:blur(16px)}
+.glass h2{color:#93c5fd;font-size:16px;margin-bottom:14px;letter-spacing:1px}
+input,select{width:100%;padding:12px 14px;margin-bottom:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.15);background:rgba(0,0,0,0.3);color:#fff;outline:none}
+input:focus{border-color:#6366f1}
+button.main-btn{width:100%;padding:13px;background:linear-gradient(90deg,#6366f1,#a855f7);border:none;border-radius:12px;color:#fff;font-weight:700;cursor:pointer;transition:0.2s}
+button.main-btn:hover{transform:scale(1.02);box-shadow:0 0 20px rgba(99,102,241,0.5)}
+.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:18px}
+.stat{background:rgba(0,0,0,0.3);border-radius:14px;padding:14px;text-align:center;border:1px solid rgba(255,255,255,0.08)}
+.stat h3{font-size:26px}.stat p{font-size:11px;color:#9ca3af}
+.search{display:flex;gap:8px;margin-bottom:16px}
+.search input,.search select{margin:0;border-radius:25px;padding:10px 16px;font-size:13px}
+.list{display:flex;flex-direction:column;gap:10px;max-height:520px;overflow-y:auto}
+.item{background:#fff;color:#111827;border-radius:16px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;animation:up 0.3s}
+@keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.item b{color:#4338ca;font-size:14px}.item small{color:#6b7280;font-size:12px}
+.badge{padding:3px 10px;border-radius:20px;font-size:10px;color:#fff;font-weight:700}
+.Pending{background:#ef4444}.Completed{background:#10b981}.In.Progress{background:#f59e0b}
+.icon-btn{border:none;padding:7px 10px;border-radius:8px;cursor:pointer;margin-left:4px}
+.upd{background:#e0e7ff}.del{background:#fee2e2}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <h1>📚 Study Planner <span>PRO</span> ✨</h1>
+  <div style="font-size:12px;color:#cbd5e1">III CSE A - JSON Project</div>
+</div>
+
+<div class="main">
+  <div class="glass">
+    <h2>➕ ADD ASSIGNMENT</h2>
+    <input type="text" id="subject" placeholder="Subject - Web Technology">
+    <input type="text" id="assignment" placeholder="Assignment - HTML Forms">
+    <input type="date" id="deadline">
+    <select id="status">
+      <option value="Pending">🔴 Pending</option>
+      <option value="In Progress">🟡 In Progress</option>
+      <option value="Completed">🟢 Completed</option>
+    </select>
+    <button class="main-btn" onclick="add()">Add Now +</button>
+    <div style="margin-top:18px;background:rgba(99,102,241,0.15);padding:12px;border-radius:12px;font-size:11px;color:#a5b4fc">
+      <b>JSON Concept:</b><br>Data is sent as JSON String -> <code>JSON.stringify()</code> -> Saved in localStorage
+    </div>
+  </div>
+
+  <div class="glass">
+    <div class="stat-row">
+      <div class="stat"><h3 id="t">0</h3><p>Total</p></div>
+      <div class="stat"><h3 id="p" style="color:#f87171">0</h3><p>Pending</p></div>
+      <div class="stat"><h3 id="c" style="color:#34d399">0</h3><p>Completed</p></div>
+    </div>
+    <div class="search">
+      <input type="text" id="search" placeholder="🔍 Search..." onkeyup="search()">
+      <select id="filter" onchange="filterBy()"><option value="All">All</option><option value="Pending">Pending</option><option value="In Progress">Progress</option><option value="Completed">Completed</option></select>
+    </div>
+    <div class="list" id="list"></div>
+  </div>
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem("planner")) || [
+  {subject:"Web Technology", assignment:"HTML Forms", deadline:"2026-09-30", status:"Completed"},
+  {subject:"JavaScript", assignment:"DOM Manipulation", deadline:"2026-10-03", status:"In Progress"},
+  {subject:"PHP", assignment:"Form Validation", deadline:"2026-10-05", status:"Pending"}
+];
+
+function saveAndShow(arr=data){
+  localStorage.setItem("planner", JSON.stringify(data));
+  let l=document.getElementById("list");
+  l.innerHTML="";
+  if(arr.length==0){l.innerHTML="<p style='color:#888;text-align:center'>No Assignments</p>";}
+  arr.forEach((it)=>{
+    let idx=data.indexOf(it);
+    l.innerHTML+=`<div class="item"><div><b>📘 ${it.subject}</b><br><small>📝 ${it.assignment}</small><br><small>📅 ${it.deadline} <span class="badge ${it.status}">${it.status}</span></small></div><div><button class="icon-btn upd" onclick="edit(${idx})">✏️</button><button class="icon-btn del" onclick="del(${idx})">🗑️</button></div></div>`;
+  });
+  document.getElementById("t").innerText=data.length;
+  document.getElementById("p").innerText=data.filter(x=>x.status=="Pending").length;
+  document.getElementById("c").innerText=data.filter(x=>x.status=="Completed").length;
+}
+function add(){
+  let s=document.getElementById("subject").value.trim();
+  let a=document.getElementById("assignment").value.trim();
+  let d=document.getElementById("deadline").value;
+  let st=document.getElementById("status").value;
+  if(!s||!a||!d){alert("Fill all fields!");return;}
+  data.unshift({subject:s, assignment:a, deadline:d, status:st});
+  document.getElementById("subject").value=""; document.getElementById("assignment").value=""; document.getElementById("deadline").value="";
+  saveAndShow();
+}
+function del(i){ if(confirm("Delete?")){ data.splice(i,1); saveAndShow(); } }
+function edit(i){ let n=prompt("Pending / In Progress / Completed",data[i].status); if(n){ data[i].status=n; saveAndShow(); } }
+function search(){ let k=document.getElementById("search").value.toLowerCase(); saveAndShow(data.filter(x=>x.subject.toLowerCase().includes(k)||x.assignment.toLowerCase().includes(k))); }
+function filterBy(){ let v=document.getElementById("filter").value; if(v=="All") saveAndShow(data); else saveAndShow(data.filter(x=>x.status==v)); }
+saveAndShow();
+</script>
+</body>
+</html>
